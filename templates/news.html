@@ -1,0 +1,20 @@
+{% extends 'flatpages/default.html' %}
+{% load custom_filters %}
+
+
+{% block content %}
+    <h1>Новости</h1>
+    <hr>
+    {% if news %}
+        {{ news|length }}
+        {% for new in news %}
+            <div>
+                <h2>{{ new.heading|censorship:False }}</h2>
+                <h3>{{ new.post_data|date:'d-m-y' }}</h3>
+                <p>{{ new.content|truncatewords:20|censorship:False }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <h2>Товаров нет!</h2>
+    {% endif %}
+{% endblock content %}
