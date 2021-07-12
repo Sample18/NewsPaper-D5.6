@@ -7,8 +7,10 @@
         <h2>{{ onenews.heading|censorship:False }}</h2>
         <h3>{{ onenews.post_data|date:'d-m-y h:m' }}</h3>
         <p>{{ onenews.content|censorship:False }}</p>
-        <a href="{% url 'post_edit' onenews.id %}">Редактировать новость</a>
-        <a href="{% url 'post_delete' onenews.id %}">Удалить новость</a>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="submit" value="подтвердить">
+        </form>
 
     </div>
 {% endblock content %}

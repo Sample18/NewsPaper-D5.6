@@ -14,6 +14,9 @@ class Author(models.Model):
     author_rating = models.IntegerField(default=0)
     author = models.OneToOneField(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.author.username
+
     def update_rating(self):
         auth = Author.objects.get(author=self.author)
         postRat = auth.post_set.all().aggregate(rating=Sum('post_rating'))
@@ -31,6 +34,9 @@ class Author(models.Model):
 class Category(models.Model):
     news_category = models.CharField(max_length=150, unique=True)
 
+    def __str__(self):
+        return self.news_category
+
 class Post(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     kind = models.CharField(max_length=2, choices=KINDS, default=paper)
@@ -39,6 +45,10 @@ class Post(models.Model):
     heading = models.CharField(max_length=255)
     content = models.TextField()
     post_rating = models.IntegerField(default=0)
+
+
+    def get_absolute_url(self):
+        return f'/news/{self.id}'
 
     def like(self):
         self.post_rating += 1
