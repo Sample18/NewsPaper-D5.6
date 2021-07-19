@@ -1,17 +1,26 @@
 from django.shortcuts import render
 from django.views.generic import ListView, UpdateView, CreateView, DetailView, DeleteView
-from django.core.paginator import Paginator
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .models import Post
 from .filters import PostFilter
 from .forms import PostForm
+from django.shortcuts import redirect
+from django.contrib.auth.models import Group
+from django.contrib.auth.decorators import login_required
 
-class PostList(ListView):
+
+class PostList(LoginRequiredMixin, ListView):
     model = Post
     template_name = 'news.html'
     context_object_name = 'news'
     # queryset = Post.objects.order_by('-post_data')
     ordering = ['-post_data']
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_author'] = not self.request.user.groups.filter(name = 'authors').exists()
+        return context
 
 class PostSearch(ListView):
     model = Post
@@ -29,19 +38,32 @@ class PostDetail(DetailView):
     template_name = 'onenews.html'
     context_object_name = 'onenews'
 
-class PostCreateView(CreateView):
+class PostCreateView(PermissionRequiredMixin, CreateView):
+    model = Post
     template_name = 'add.html'
     form_class = PostForm
+    permission_required = ('news.add_post',)
 
-class PostUpdateView(UpdateView):
+class PostUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Post
     template_name = 'edit.html'
     form_class = PostForm
+    permission_required = ('news.change_post',)
 
     def get_object(self, **kwargs):
         id = self.kwargs.get('pk')
         return Post.objects.get(pk=id)
 
 class PostDeleteView(DeleteView):
+    model = Post
     template_name = 'delete.html'
     queryset = Post.objects.all()
     success_url = '/news/'
+
+@login_required
+def upgrade_me(request):
+    user = request.user
+    premium_group = Group.objects.get(name='authors')
+    if not request.user.groups.filter(name='authors').exists():
+        premium_group.user_set.add(user)
+    return redirect('/news/')
